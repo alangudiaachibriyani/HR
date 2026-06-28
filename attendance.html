@@ -164,26 +164,16 @@ function buildReport(){
         empStats[emp]={daysWorked,dailyLog};
       });
 
-      // OT: aggregate OT hours per day from sessions (take max per date, recorded in dinner)
-      const otByDate={};
+      // OT: aggregate per date using same toDateString() key format
+      const otByDateFinal={};
       json.data.forEach(r=>{
-        if(!r.otHours||r.otHours<=0) return;
+        if(!r.otHours||parseFloat(r.otHours)<=0) return;
         const d=new Date(r.date);
+        if(isNaN(d)) return;
         if(d.getMonth()!==month||d.getFullYear()!==year) return;
         const key=d.toDateString();
-        otByDate[key]=(otByDate[key]||0)+r.otHours; // sum in case both sessions have value
+        otByDateFinal[key]=Math.max(otByDateFinal[key]||0, parseFloat(r.otHours));
       });
-      // Deduplicate: keep only max per date (in case entered twice)
-      // Actually take the latest entry per date
-      const otByDateFinal={};
-      json.data.filter(r=>{
-        const d=new Date(r.date);
-        return r.otHours>0&&d.getMonth()===month&&d.getFullYear()===year;
-      }).forEach(r=>{
-        const key=new Date(r.date).toDateString();
-        otByDateFinal[key]=Math.max(otByDateFinal[key]||0, parseFloat(r.otHours)||0);
-      });
-
       const totalOTHours=Object.values(otByDateFinal).reduce((s,v)=>s+v,0);
 
       // Salary calc
@@ -196,12 +186,11 @@ function buildReport(){
         } else {
           earned=Math.round(daysWorked*(s.rate/WORKING_DAYS_BASIS));
         }
-        // OT: only if otRate is set and employee was present on OT days
         let otEarned=0;
         let otHoursWorked=0;
-        if(s.otRate){
+        if(s.otRate && s.otRate > 0){
           Object.entries(otByDateFinal).forEach(([dateKey,hrs])=>{
-            const status=empStats[emp].dailyLog[dateKey];
+            const status=empStats[emp]?.dailyLog?.[dateKey];
             if(status==='full'||status==='half'){
               otHoursWorked+=hrs;
               otEarned+=Math.round(hrs*s.otRate);
@@ -269,7 +258,7 @@ function buildReport(){
         Object.entries(otByDateFinal).sort((a,b)=>new Date(a[0])-new Date(b[0])).forEach(([dateKey,hrs])=>{
           const d=new Date(dateKey);
           const dayName=DAYS[d.getDay()];
-          const eligible=salaryCalc.filter(r=>r.otRate&&(empStats[r.emp].dailyLog[dateKey]==='full'||empStats[r.emp].dailyLog[dateKey]==='half'));
+          const eligible=salaryCalc.filter(r=>r.otRate&&r.otRate>0&&(empStats[r.emp]?.dailyLog?.[dateKey]==='full'||empStats[r.emp]?.dailyLog?.[dateKey]==='half'));
           const otAmt=eligible.reduce((s,r)=>s+Math.round(hrs*r.otRate),0);
           const names=eligible.map(r=>r.emp).join(', ');
           html+=`<tr>
