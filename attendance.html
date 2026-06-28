@@ -197,8 +197,8 @@ function buildReport(){
         let otEarned=0;
         let otHoursWorked=0;
         if(s.otRate && s.otRate > 0){
-          Object.entries(otByDateFinal).forEach(([dateKey,hrs])=>{
-            const status=empStats[emp]?.dailyLog?.[dateKey];
+          Object.entries(otByDateFinal).forEach(([dk,hrs])=>{
+            const status=empStats[emp]?.dailyLog?.[dk];
             if(status==='full'||status==='half'){
               otHoursWorked+=hrs;
               otEarned+=Math.round(hrs*s.otRate);
@@ -263,10 +263,10 @@ function buildReport(){
         <div class="table-wrap"><table>
           <thead><tr><th>Date</th><th>Day</th><th>OT Hours</th><th>Eligible Employees</th><th>OT Amount</th></tr></thead>
           <tbody>`;
-        Object.entries(otByDateFinal).sort((a,b)=>new Date(a[0])-new Date(b[0])).forEach(([dateKey,hrs])=>{
-          const d=new Date(dateKey);
+        Object.entries(otByDateFinal).sort((a,b)=>new Date(a[0])-new Date(b[0])).forEach(([dk,hrs])=>{
+          const d=new Date(dk);
           const dayName=DAYS[d.getDay()];
-          const eligible=salaryCalc.filter(r=>r.otRate&&r.otRate>0&&(empStats[r.emp]?.dailyLog?.[dateKey]==='full'||empStats[r.emp]?.dailyLog?.[dateKey]==='half'));
+          const eligible=salaryCalc.filter(r=>r.otRate&&r.otRate>0&&(empStats[r.emp]?.dailyLog?.[dk]==='full'||empStats[r.emp]?.dailyLog?.[dk]==='half'));
           const otAmt=eligible.reduce((s,r)=>s+Math.round(hrs*r.otRate),0);
           const names=eligible.map(r=>r.emp).join(', ');
           html+=`<tr>
