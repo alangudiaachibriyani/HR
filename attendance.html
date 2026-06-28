@@ -121,10 +121,12 @@ function buildReport(){
         if(d.getDay()!==1) allDates.push(new Date(d));
       }
 
-      // dayMap
+      // Build dayMap using consistent date key (YYYY-MM-DD)
+      function dateKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
+
       const dayMap={};
       monthSessions.forEach(s=>{
-        const key=s.date.toDateString();
+        const key=dateKey(s.date);
         if(!dayMap[key]) dayMap[key]={date:s.date,lunch:new Set(),dinner:new Set()};
         const all=[...s.kitchen,...s.shop];
         if(s.session==='Lunch') all.forEach(n=>dayMap[key].lunch.add(n));
@@ -152,7 +154,7 @@ function buildReport(){
         const dailyLog={};
         const n=parseName(emp);
         allDates.forEach(d=>{
-          const key=d.toDateString();
+          const key=dateKey(d);
           const rec=dayMap[key];
           const inL=rec&&rec.lunch.has(n);
           const inD=rec&&rec.dinner.has(n);
@@ -171,7 +173,7 @@ function buildReport(){
         const d=new Date(r.date);
         if(isNaN(d)) return;
         if(d.getMonth()!==month||d.getFullYear()!==year) return;
-        const key=d.toDateString();
+        const key=dateKey(d);
         otByDateFinal[key]=Math.max(otByDateFinal[key]||0, parseFloat(r.otHours));
       });
       const totalOTHours=Object.values(otByDateFinal).reduce((s,v)=>s+v,0);
@@ -289,7 +291,7 @@ function buildReport(){
           const {daysWorked,dailyLog}=empStats[emp];
           html+=`<tr><td><strong>${emp}</strong><br><span style="font-size:10px;color:#aaa;">${SALARY[emp].role}</span></td>`;
           allDates.forEach(d=>{
-            const key=d.toDateString();
+            const key=dateKey(d);
             const status=dailyLog[key]||'absent';
             const label=status==='full'?'P':status==='half'?'½':'A';
             const cls=status==='full'?'present':status==='half'?'half':'absent';
