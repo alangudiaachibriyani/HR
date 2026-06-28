@@ -178,6 +178,12 @@ function buildReport(){
       });
       const totalOTHours=Object.values(otByDateFinal).reduce((s,v)=>s+v,0);
 
+      // DEBUG: show keys to diagnose mismatch
+      const otKeys=Object.keys(otByDateFinal);
+      const sampleEmp=employees[0];
+      const sampleLogKeys=sampleEmp?Object.keys(empStats[sampleEmp]?.dailyLog||{}).slice(0,5):[];
+      const debugInfo=`OT keys: ${JSON.stringify(otKeys)} | Sample dailyLog keys: ${JSON.stringify(sampleLogKeys)}`;
+
       // Salary calc
       const salaryCalc=employees.map(emp=>{
         const s=SALARY[emp];
@@ -206,7 +212,7 @@ function buildReport(){
       const totalOTEarned=salaryCalc.reduce((s,r)=>s+r.otEarned,0);
       const grandTotal=totalSalary+totalOTEarned;
       const monthName=['January','February','March','April','May','June','July','August','September','October','November','December'][month];
-      document.getElementById('reportInfo').textContent=`${monthName} ${year} · up to ${cutoff.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`;
+      document.getElementById('reportInfo').textContent=`${monthName} ${year} · up to ${cutoff.toLocaleDateString('en-IN',{day:'numeric',month:'short'})} | DEBUG: ${debugInfo}`;
 
       // ── Render ──
       let html=`
