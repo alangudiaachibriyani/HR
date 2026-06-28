@@ -6,324 +6,303 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:sans-serif;background:#f7f7f5;color:#1a1a1a;font-size:13px;}
 .container{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;}
+.topbar img{height:50px;width:50px;border-radius:50%;object-fit:contain;flex-shrink:0;background:#fff;border:1px solid #eee;}
 h1{font-size:18px;font-weight:600;margin-bottom:2px;}
-.sub{font-size:12px;color:#666;margin-bottom:1.5rem;}
+.sub{font-size:12px;color:#666;}
 .controls{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
 select,button{font-size:12px;padding:6px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;}
 button{background:#1a1a1a;color:#fff;border:none;}
-button:hover{background:#333;}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1.5rem;}
+.info{font-size:11px;color:#888;margin-left:4px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem;}
 .kpi{background:#fff;border-radius:8px;padding:.85rem 1rem;border:1px solid #eee;}
 .kpi-label{font-size:11px;color:#888;margin-bottom:4px;}
 .kpi-val{font-size:20px;font-weight:600;}
 .kpi-sub{font-size:10px;color:#aaa;margin-top:2px;}
-.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:.75rem;}
-.table-wrap{overflow-x:auto;margin-bottom:1.5rem;}
+.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:.75rem;margin-top:1.5rem;}
+.table-wrap{overflow-x:auto;margin-bottom:1rem;}
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #eee;font-size:12px;}
 th{background:#f0f0ee;padding:8px 10px;text-align:left;font-weight:500;font-size:11px;color:#555;white-space:nowrap;}
 td{padding:7px 10px;border-top:1px solid #f0f0ee;white-space:nowrap;}
 tr:hover td{background:#fafaf8;}
-.present{background:#d4edda;color:#155724;border-radius:3px;padding:1px 5px;font-size:10px;}
-.absent{background:#f8d7da;color:#721c24;border-radius:3px;padding:1px 5px;font-size:10px;}
-.half{background:#fff3cd;color:#856404;border-radius:3px;padding:1px 5px;font-size:10px;}
-.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;}
-.tag-monthly{background:#e8f4fd;color:#1565c0;}
-.tag-daily{background:#e8f5e9;color:#2e7d32;}
-.salary-table td:last-child{font-weight:600;color:#1D9E75;}
-.loading{text-align:center;padding:3rem;color:#888;}
-.error{text-align:center;padding:2rem;color:#A32D2D;}
+.P{background:#d4edda;color:#155724;border-radius:3px;padding:1px 5px;font-size:10px;}
+.H{background:#fff3cd;color:#856404;border-radius:3px;padding:1px 5px;font-size:10px;}
+.A{background:#f8d7da;color:#721c24;border-radius:3px;padding:1px 5px;font-size:10px;}
+.bm{background:#e8f4fd;color:#1565c0;font-size:10px;padding:2px 7px;border-radius:4px;}
+.bd{background:#e8f5e9;color:#2e7d32;font-size:10px;padding:2px 7px;border-radius:4px;}
+.green{color:#1D9E75;font-weight:600;}
+.team-row td{background:#f7f7f5;font-weight:600;font-size:11px;color:#888;padding:5px 10px;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:.5rem;font-size:11px;color:#666;}
 </style>
 </head>
 <body>
 <div class="container">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:.5rem;">
-    <img src="https://raw.githubusercontent.com/alangudiaachibriyani/HR/main/logo.png" alt="logo" style="height:50px;width:50px;border-radius:50%;object-fit:contain;flex-shrink:0;background:#fff;border:1px solid #eee;">
-    <div>
-      <h1>Alangudi Aachi Biriyani</h1>
-      <div class="sub" style="margin-bottom:0;">Attendance & Salary Report</div>
-    </div>
+  <div class="topbar">
+    <img src="https://raw.githubusercontent.com/alangudiaachibriyani/HR/main/logo.png" alt="logo">
+    <div><h1>Alangudi Aachi Biriyani</h1><div class="sub">Attendance & Salary Report</div></div>
   </div>
   <div class="controls">
     <select id="selMonth"></select>
     <select id="selYear"></select>
-    <button onclick="buildReport()">Generate Report</button>
-    <span id="reportInfo" style="font-size:11px;color:#888;"></span>
+    <button onclick="generate()">Generate Report</button>
+    <span class="info" id="info"></span>
   </div>
-  <div id="app"><div class="loading">Select month and click Generate Report</div></div>
+  <div id="app"><p style="color:#888;padding:2rem 0;">Select month and click Generate Report</p></div>
 </div>
-
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbz_J4uu4K0641pG2Tm9WyJ7gDG3iYGfiD_v7xNbzGcDCKPNWj0co_-BDJqh0j7le5Nr/exec";
-const WORKING_DAYS_BASIS = 26;
-const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-let cachedData = null;
+const URL = "https://script.google.com/macros/s/AKfycbz_J4uu4K0641pG2Tm9WyJ7gDG3iYGfiD_v7xNbzGcDCKPNWj0co_-BDJqh0j7le5Nr/exec";
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const WD_BASIS = 26;
+let cache = null;
 
-function parseName(n){ return n.trim().split(/\s+/)[0]; }
-function parseNames(str){ return str ? str.split(',').map(n=>parseName(n)).filter(Boolean) : []; }
-
-function initControls(){
-  const mSel=document.getElementById('selMonth');
-  const ySel=document.getElementById('selYear');
+// Init dropdowns
+(function(){
+  const ms = document.getElementById('selMonth');
+  const ys = document.getElementById('selYear');
   ['January','February','March','April','May','June','July','August','September','October','November','December']
-    .forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; mSel.appendChild(o); });
-  const now=new Date();
-  mSel.value=now.getMonth();
-  for(let y=2025;y<=2027;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o); }
-  ySel.value=now.getFullYear();
+    .forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; ms.appendChild(o); });
+  const now = new Date();
+  ms.value = now.getMonth();
+  for(let y=2025;y<=2027;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; ys.appendChild(o); }
+  ys.value = now.getFullYear();
+})();
+
+function dk(d){ // date key YYYY-MM-DD
+  return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
 }
 
-async function fetchSheetData(){
-  if(cachedData) return cachedData;
-  const res = await fetch(SHEET_URL);
-  const json = await res.json();
-  if(json.status !== 'ok') throw new Error(json.message || 'Sheet error');
-  cachedData = json;
-  return json;
+function firstName(s){ return (s||'').trim().split(/[\s,]+/)[0]; }
+
+function parseNames(str){
+  if(!str) return [];
+  return str.split(',').map(n=>firstName(n)).filter(Boolean);
 }
 
-function buildReport(){
-  const month=parseInt(document.getElementById('selMonth').value);
-  const year=parseInt(document.getElementById('selYear').value);
-  const app=document.getElementById('app');
-  app.innerHTML='<div class="loading">⏳ Loading data from sheet...</div>';
+async function fetchData(){
+  if(cache) return cache;
+  const r = await fetch(URL);
+  const j = await r.json();
+  if(j.status !== 'ok') throw new Error(j.message);
+  cache = j;
+  return j;
+}
 
-  fetchSheetData().then(json => {
-    try {
-      const sessions = json.data.map(r=>{
-        const d=new Date(r.date);
-        return{date:d,session:r.session,kitchen:parseNames(r.kitchenPresent||''),shop:parseNames(r.shopPresent||''),dow:d.getDay()};
-      }).filter(r=>!isNaN(r.date));
+async function generate(){
+  const month = parseInt(document.getElementById('selMonth').value);
+  const year  = parseInt(document.getElementById('selYear').value);
+  const app   = document.getElementById('app');
+  const info  = document.getElementById('info');
+  app.innerHTML = '<p style="color:#888;padding:2rem 0;">⏳ Loading...</p>';
+  info.textContent = '';
 
-      // Build salary master from sheet (only Active employees)
-      const salaryMaster = json.salaryMaster || [];
-      const SALARY = {};
-      salaryMaster.forEach(e=>{
-        if(!e.employee) return;
-        SALARY[e.employee] = {
-          type: e.payType.toLowerCase().includes('month') ? 'monthly' : 'daily',
-          rate: e.rate,
-          team: e.team,
-          role: e.role,
-          status: e.status
-        };
-      });
+  try {
+    const j = await fetchData();
 
-      // Filter to selected month up to today
-      const today=new Date();
-      const isCurrentMonth=(today.getMonth()===month && today.getFullYear()===year);
-      const cutoff=isCurrentMonth ? today : new Date(year,month+1,0);
+    // Build salary master from sheet
+    const SM = {}; // employee name -> {type,rate,team,role,status,otRate}
+    (j.salaryMaster||[]).forEach(e=>{
+      const otR = (e.otRate !== null && e.otRate !== undefined && e.otRate !== 'NA')
+                  ? parseFloat(e.otRate) || null : null;
+      SM[e.employee] = {
+        type:   e.payType.toLowerCase().includes('month') ? 'monthly' : 'daily',
+        rate:   parseFloat(e.rate)||0,
+        team:   e.team,
+        role:   e.role,
+        status: e.status,
+        otRate: otR
+      };
+    });
 
-      const monthSessions=sessions.filter(r=>r.date.getMonth()===month && r.date.getFullYear()===year && r.date<=cutoff);
+    // Parse sessions filtered to month
+    const today  = new Date();
+    const isCurr = today.getMonth()===month && today.getFullYear()===year;
+    const cutoff = isCurr ? today : new Date(year,month+1,0);
 
-      // All working dates (no Mondays)
-      const allDates=[];
-      for(let d=new Date(year,month,1); d<=new Date(year,month+1,0) && d<=cutoff; d.setDate(d.getDate()+1)){
-        if(d.getDay()!==1) allDates.push(new Date(d));
-      }
+    const sessions = (j.data||[]).map(r=>{
+      const d = new Date(r.date);
+      return { date:d, session:r.session,
+               kitchen: parseNames(r.kitchenPresent),
+               shop:    parseNames(r.shopPresent),
+               otHours: parseFloat(r.otHours)||0 };
+    }).filter(r=>!isNaN(r.date) && r.date.getMonth()===month && r.date.getFullYear()===year && r.date<=cutoff);
 
-      // Build dayMap using consistent date key (YYYY-MM-DD)
-      function dateKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
-
-      const dayMap={};
-      monthSessions.forEach(s=>{
-        const key=dateKey(s.date);
-        if(!dayMap[key]) dayMap[key]={date:s.date,lunch:new Set(),dinner:new Set()};
-        const all=[...s.kitchen,...s.shop];
-        if(s.session==='Lunch') all.forEach(n=>dayMap[key].lunch.add(n));
-        else if(s.session==='Dinner') all.forEach(n=>dayMap[key].dinner.add(n));
-      });
-
-      const totalWorkingDays=allDates.length;
-
-      // Active employees only for this month
-      // For relieved employees: show only if they worked at least 1 session in this month
-      const allNames = new Set();
-      monthSessions.forEach(s=>[...s.kitchen,...s.shop].forEach(n=>allNames.add(n)));
-
-      // Combine: active employees + any relieved who appeared this month
-      const employees = Object.keys(SALARY).filter(emp=>{
-        const s=SALARY[emp];
-        if(s.status && s.status.toLowerCase()==='active') return true;
-        return allNames.has(parseName(emp)); // relieved but worked this month
-      });
-
-      // Per employee attendance
-      const empStats={};
-      employees.forEach(emp=>{
-        let daysWorked=0;
-        const dailyLog={};
-        const n=parseName(emp);
-        allDates.forEach(d=>{
-          const key=dateKey(d);
-          const rec=dayMap[key];
-          const inL=rec&&rec.lunch.has(n);
-          const inD=rec&&rec.dinner.has(n);
-          let status='absent';
-          if(inL&&inD){status='full';daysWorked+=1;}
-          else if(inL||inD){status='half';daysWorked+=0.5;}
-          dailyLog[key]=status;
-        });
-        empStats[emp]={daysWorked,dailyLog};
-      });
-
-      // OT: aggregate per date using same toDateString() key format
-      const otByDateFinal={};
-      json.data.forEach(r=>{
-        if(!r.otHours||parseFloat(r.otHours)<=0) return;
-        const d=new Date(r.date);
-        if(isNaN(d)) return;
-        if(d.getMonth()!==month||d.getFullYear()!==year) return;
-        const key=dateKey(d);
-        otByDateFinal[key]=Math.max(otByDateFinal[key]||0, parseFloat(r.otHours));
-      });
-      const totalOTHours=Object.values(otByDateFinal).reduce((s,v)=>s+v,0);
-
-      // DEBUG: show keys to diagnose mismatch
-      const otKeys=Object.keys(otByDateFinal);
-      const sampleEmp=employees[0];
-      const sampleLogKeys=sampleEmp?Object.keys(empStats[sampleEmp]?.dailyLog||{}).slice(0,5):[];
-      const debugInfo=`OT keys: ${JSON.stringify(otKeys)} | Sample dailyLog keys: ${JSON.stringify(sampleLogKeys)}`;
-
-      // Salary calc
-      const salaryCalc=employees.map(emp=>{
-        const s=SALARY[emp];
-        const {daysWorked}=empStats[emp];
-        let earned=0;
-        if(s.type==='daily'){
-          earned=Math.round(daysWorked*s.rate);
-        } else {
-          earned=Math.round(daysWorked*(s.rate/WORKING_DAYS_BASIS));
-        }
-        let otEarned=0;
-        let otHoursWorked=0;
-        if(s.otRate && s.otRate > 0){
-          Object.entries(otByDateFinal).forEach(([dk,hrs])=>{
-            const status=empStats[emp]?.dailyLog?.[dk];
-            if(status==='full'||status==='half'){
-              otHoursWorked+=hrs;
-              otEarned+=Math.round(hrs*s.otRate);
-            }
-          });
-        }
-        return{emp,...s,daysWorked,earned,otEarned,otHoursWorked};
-      });
-
-      const totalSalary=salaryCalc.reduce((s,r)=>s+r.earned,0);
-      const totalOTEarned=salaryCalc.reduce((s,r)=>s+r.otEarned,0);
-      const grandTotal=totalSalary+totalOTEarned;
-      const monthName=['January','February','March','April','May','June','July','August','September','October','November','December'][month];
-      document.getElementById('reportInfo').textContent=`${monthName} ${year} · up to ${cutoff.toLocaleDateString('en-IN',{day:'numeric',month:'short'})} | DEBUG: ${debugInfo}`;
-
-      // ── Render ──
-      let html=`
-      <div class="summary-grid">
-        <div class="kpi"><div class="kpi-label">Working days tracked</div><div class="kpi-val">${totalWorkingDays}</div><div class="kpi-sub">${monthName} ${year} (excl. Mondays)</div></div>
-        <div class="kpi"><div class="kpi-label">Total salary liability</div><div class="kpi-val">₹${totalSalary.toLocaleString('en-IN')}</div><div class="kpi-sub">excl. OT</div></div>
-        <div class="kpi"><div class="kpi-label">Total OT pay</div><div class="kpi-val">₹${totalOTEarned.toLocaleString('en-IN')}</div><div class="kpi-sub">${totalOTHours} hrs across ${Object.keys(otByDateFinal).length} days</div></div>
-        <div class="kpi"><div class="kpi-label">Grand total</div><div class="kpi-val" style="color:#1D9E75;">₹${grandTotal.toLocaleString('en-IN')}</div><div class="kpi-sub">salary + OT</div></div>
-        <div class="kpi"><div class="kpi-label">Active employees</div><div class="kpi-val">${employees.filter(e=>SALARY[e].status&&SALARY[e].status.toLowerCase()==='active').length}</div><div class="kpi-sub">in salary master</div></div>
-      </div>
-
-      <div class="section-title">Salary Summary</div>
-      <div class="table-wrap"><table class="salary-table">
-        <thead><tr><th>Employee</th><th>Team</th><th>Role</th><th>Pay Type</th><th>Rate</th><th>Days Worked</th><th>Salary</th><th>OT Pay</th><th>Total</th></tr></thead>
-        <tbody>`;
-
-      ['Kitchen','Shop'].forEach(team=>{
-        const teamEmps=salaryCalc.filter(r=>r.team===team);
-        if(!teamEmps.length) return;
-        html+=`<tr><td colspan="7" style="background:#f7f7f5;font-weight:600;font-size:11px;color:#888;padding:5px 10px;">${team} Team</td></tr>`;
-        teamEmps.forEach(r=>{
-          const typeTag=r.type==='monthly'?`<span class="badge tag-monthly">Monthly</span>`:`<span class="badge tag-daily">Daily</span>`;
-          const rateStr=r.type==='monthly'?`₹${r.rate.toLocaleString('en-IN')}/mo`:`₹${r.rate}/day`;
-          const relievedTag=r.status&&r.status.toLowerCase()==='relieved'?` <span style="font-size:10px;color:#999;">(Relieved)</span>`:'';
-          const otCell=r.otRate?`₹${r.otEarned.toLocaleString('en-IN')}<br><span style="font-size:10px;color:#888;">${r.otHoursWorked}hrs × ₹${r.otRate}</span>`:`<span style="color:#ccc;">—</span>`;
-          const total=r.earned+r.otEarned;
-          html+=`<tr>
-            <td><strong>${r.emp}</strong>${relievedTag}</td>
-            <td>${r.team}</td><td>${r.role}</td><td>${typeTag}</td><td>${rateStr}</td>
-            <td>${r.daysWorked} days</td>
-            <td>₹${r.earned.toLocaleString('en-IN')}</td>
-            <td>${otCell}</td>
-            <td style="font-weight:700;">₹${total.toLocaleString('en-IN')}</td>
-          </tr>`;
-        });
-      });
-
-      html+=`<tr style="background:#f7f7f5;">
-        <td colspan="6" style="text-align:right;font-weight:600;">Total</td>
-        <td style="font-weight:700;">₹${totalSalary.toLocaleString('en-IN')}</td>
-        <td style="font-weight:700;">₹${totalOTEarned.toLocaleString('en-IN')}</td>
-        <td style="font-weight:700;font-size:14px;color:#1D9E75;">₹${grandTotal.toLocaleString('en-IN')}</td>
-      </tr></tbody></table></div>`;
-
-      // OT Summary section
-      if(Object.keys(otByDateFinal).length>0){
-        html+=`<div class="section-title" style="margin-top:1.5rem;">⏱ OT Summary</div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Date</th><th>Day</th><th>OT Hours</th><th>Eligible Employees</th><th>OT Amount</th></tr></thead>
-          <tbody>`;
-        Object.entries(otByDateFinal).sort((a,b)=>new Date(a[0])-new Date(b[0])).forEach(([dk,hrs])=>{
-          const d=new Date(dk);
-          const dayName=DAYS[d.getDay()];
-          const eligible=salaryCalc.filter(r=>r.otRate&&r.otRate>0&&(empStats[r.emp]?.dailyLog?.[dk]==='full'||empStats[r.emp]?.dailyLog?.[dk]==='half'));
-          const otAmt=eligible.reduce((s,r)=>s+Math.round(hrs*r.otRate),0);
-          const names=eligible.map(r=>r.emp).join(', ');
-          html+=`<tr>
-            <td>${d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td>
-            <td>${dayName}</td>
-            <td><strong>${hrs} hrs</strong></td>
-            <td style="color:#555;">${names||'—'}</td>
-            <td style="font-weight:600;color:#1D9E75;">₹${otAmt.toLocaleString('en-IN')}</td>
-          </tr>`;
-        });
-        html+=`</tbody></table></div>`;
-      }
-
-      // Attendance grid
-      html+=`<div class="section-title" style="margin-top:1.5rem;">Day-wise Attendance Grid</div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>Employee</th>`;
-      allDates.forEach(d=>{
-        html+=`<th style="min-width:34px;text-align:center;">${d.getDate()}<br><span style="font-size:9px;color:#aaa;">${['Su','M','Tu','W','Th','Fr','Sa'][d.getDay()]}</span></th>`;
-      });
-      html+=`<th>Days</th></tr></thead><tbody>`;
-
-      ['Kitchen','Shop'].forEach(team=>{
-        const teamEmps=employees.filter(e=>SALARY[e].team===team);
-        if(!teamEmps.length) return;
-        html+=`<tr><td colspan="${allDates.length+2}" style="background:#f7f7f5;font-weight:600;font-size:11px;color:#888;padding:5px 10px;">${team} Team</td></tr>`;
-        teamEmps.forEach(emp=>{
-          const {daysWorked,dailyLog}=empStats[emp];
-          html+=`<tr><td><strong>${emp}</strong><br><span style="font-size:10px;color:#aaa;">${SALARY[emp].role}</span></td>`;
-          allDates.forEach(d=>{
-            const key=dateKey(d);
-            const status=dailyLog[key]||'absent';
-            const label=status==='full'?'P':status==='half'?'½':'A';
-            const cls=status==='full'?'present':status==='half'?'half':'absent';
-            html+=`<td style="text-align:center;"><span class="${cls}">${label}</span></td>`;
-          });
-          html+=`<td><strong>${daysWorked}</strong></td></tr>`;
-        });
-      });
-
-      html+=`</tbody></table></div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:.5rem;font-size:11px;color:#666;">
-        <span><span class="present">P</span> Present (full day)</span>
-        <span><span class="half">½</span> Half day (1 session only)</span>
-        <span><span class="absent">A</span> Absent</span>
-      </div>`;
-
-      app.innerHTML=html;
-    } catch(e){
-      app.innerHTML=`<div class="error">Error building report: ${e.message}</div>`;
+    // Working dates (no Monday)
+    const allDates = [];
+    for(let d=new Date(year,month,1); d<=new Date(year,month+1,0)&&d<=cutoff; d.setDate(d.getDate()+1)){
+      if(d.getDay()!==1) allDates.push(new Date(d));
     }
-  }).catch(e=>{
-    app.innerHTML=`<div class="error">Could not load sheet data: ${e.message}</div>`;
-  });
-}
 
-initControls();
+    // dayMap: dk -> {lunch:Set, dinner:Set}
+    const dayMap = {};
+    sessions.forEach(s=>{
+      const key = dk(s.date);
+      if(!dayMap[key]) dayMap[key] = {lunch:new Set(), dinner:new Set()};
+      const all = [...s.kitchen, ...s.shop];
+      if(s.session==='Lunch')  all.forEach(n=>dayMap[key].lunch.add(n));
+      if(s.session==='Dinner') all.forEach(n=>dayMap[key].dinner.add(n));
+    });
+
+    // OT map: dk -> hours
+    const otMap = {};
+    sessions.forEach(s=>{
+      if(s.otHours > 0){
+        const key = dk(s.date);
+        otMap[key] = Math.max(otMap[key]||0, s.otHours);
+      }
+    });
+
+    // Active employees + relieved who worked this month
+    const allWorked = new Set();
+    sessions.forEach(s=>[...s.kitchen,...s.shop].forEach(n=>allWorked.add(n)));
+    const emps = Object.keys(SM).filter(e=>{
+      const s = SM[e];
+      if(!s.status) return true;
+      if(s.status.toLowerCase()==='active') return true;
+      return allWorked.has(firstName(e));
+    });
+
+    // Attendance per employee
+    const stats = {};
+    emps.forEach(emp=>{
+      let daysWorked = 0;
+      const log = {};
+      const fn = firstName(emp);
+      allDates.forEach(d=>{
+        const key = dk(d);
+        const rec = dayMap[key];
+        const inL = rec && rec.lunch.has(fn);
+        const inD = rec && rec.dinner.has(fn);
+        let st = 'A';
+        if(inL&&inD){ st='P'; daysWorked+=1; }
+        else if(inL||inD){ st='H'; daysWorked+=0.5; }
+        log[key] = st;
+      });
+      stats[emp] = {daysWorked, log};
+    });
+
+    // Salary + OT calc
+    const calc = emps.map(emp=>{
+      const s = SM[emp];
+      const {daysWorked, log} = stats[emp];
+      const salary = s.type==='monthly'
+        ? Math.round(daysWorked * (s.rate/WD_BASIS))
+        : Math.round(daysWorked * s.rate);
+      let otEarned=0, otHrs=0;
+      if(s.otRate && s.otRate>0){
+        Object.entries(otMap).forEach(([key,hrs])=>{
+          const st = log[key];
+          if(st==='P'||st==='H'){
+            otHrs += hrs;
+            otEarned += Math.round(hrs * s.otRate);
+          }
+        });
+      }
+      return { emp, ...s, daysWorked, salary, otEarned, otHrs };
+    });
+
+    const totSalary = calc.reduce((s,r)=>s+r.salary,0);
+    const totOT     = calc.reduce((s,r)=>s+r.otEarned,0);
+    const totOTHrs  = Object.values(otMap).reduce((s,v)=>s+v,0);
+    const grand     = totSalary + totOT;
+    const activeN   = emps.filter(e=>SM[e].status&&SM[e].status.toLowerCase()==='active').length;
+    const monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][month];
+
+    info.textContent = `${monthName} ${year} · up to ${cutoff.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`;
+
+    // ── Render ──
+    let h = '';
+
+    // KPIs
+    h += `<div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Working days</div><div class="kpi-val">${allDates.length}</div><div class="kpi-sub">${monthName} (excl. Mondays)</div></div>
+      <div class="kpi"><div class="kpi-label">Salary total</div><div class="kpi-val">₹${totSalary.toLocaleString('en-IN')}</div><div class="kpi-sub">excl. OT</div></div>
+      <div class="kpi"><div class="kpi-label">OT pay</div><div class="kpi-val">₹${totOT.toLocaleString('en-IN')}</div><div class="kpi-sub">${totOTHrs} hrs · ${Object.keys(otMap).length} days</div></div>
+      <div class="kpi"><div class="kpi-label">Grand total</div><div class="kpi-val green">₹${grand.toLocaleString('en-IN')}</div><div class="kpi-sub">salary + OT</div></div>
+      <div class="kpi"><div class="kpi-label">Active staff</div><div class="kpi-val">${activeN}</div><div class="kpi-sub">in salary master</div></div>
+    </div>`;
+
+    // Salary table
+    h += `<div class="sec">Salary Summary</div><div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Team</th><th>Role</th><th>Type</th><th>Rate</th><th>Days</th><th>Salary</th><th>OT Pay</th><th>Total</th></tr></thead><tbody>`;
+    ['Kitchen','Shop'].forEach(team=>{
+      const rows = calc.filter(r=>r.team===team);
+      if(!rows.length) return;
+      h += `<tr class="team-row"><td colspan="9">${team} Team</td></tr>`;
+      rows.forEach(r=>{
+        const rel = r.status&&r.status.toLowerCase()==='relieved' ? ` <span style="font-size:10px;color:#999;">(Relieved)</span>` : '';
+        const typeTag = r.type==='monthly' ? `<span class="bm">Monthly</span>` : `<span class="bd">Daily</span>`;
+        const rateStr = r.type==='monthly' ? `₹${r.rate.toLocaleString('en-IN')}/mo` : `₹${r.rate}/day`;
+        const otCell = r.otRate&&r.otRate>0
+          ? `₹${r.otEarned.toLocaleString('en-IN')}<br><span style="font-size:10px;color:#888;">${r.otHrs}h×₹${r.otRate}</span>`
+          : `<span style="color:#ccc;">—</span>`;
+        h += `<tr>
+          <td><strong>${r.emp}</strong>${rel}</td>
+          <td>${r.team}</td><td>${r.role}</td><td>${typeTag}</td><td>${rateStr}</td>
+          <td>${r.daysWorked}d</td>
+          <td>₹${r.salary.toLocaleString('en-IN')}</td>
+          <td>${otCell}</td>
+          <td class="green">₹${(r.salary+r.otEarned).toLocaleString('en-IN')}</td>
+        </tr>`;
+      });
+    });
+    h += `<tr style="background:#f7f7f5;">
+      <td colspan="6" style="text-align:right;font-weight:600;">Total</td>
+      <td style="font-weight:700;">₹${totSalary.toLocaleString('en-IN')}</td>
+      <td style="font-weight:700;">₹${totOT.toLocaleString('en-IN')}</td>
+      <td style="font-weight:700;font-size:14px;" class="green">₹${grand.toLocaleString('en-IN')}</td>
+    </tr></tbody></table></div>`;
+
+    // OT Summary
+    if(Object.keys(otMap).length > 0){
+      h += `<div class="sec">⏱ OT Summary</div><div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Day</th><th>OT Hours</th><th>Eligible Employees</th><th>OT Amount</th></tr></thead><tbody>`;
+      Object.entries(otMap).sort().forEach(([key,hrs])=>{
+        const d = new Date(key);
+        const eligible = calc.filter(r=>r.otRate&&r.otRate>0&&(stats[r.emp]?.log?.[key]==='P'||stats[r.emp]?.log?.[key]==='H'));
+        const amt = eligible.reduce((s,r)=>s+Math.round(hrs*r.otRate),0);
+        h += `<tr>
+          <td>${d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td>
+          <td>${DAYS[d.getDay()]}</td>
+          <td><strong>${hrs} hrs</strong></td>
+          <td>${eligible.map(r=>r.emp).join(', ')||'—'}</td>
+          <td class="green">₹${amt.toLocaleString('en-IN')}</td>
+        </tr>`;
+      });
+      h += `</tbody></table></div>`;
+    }
+
+    // Attendance grid
+    h += `<div class="sec">Day-wise Attendance Grid</div><div class="table-wrap"><table><thead><tr><th>Employee</th>`;
+    allDates.forEach(d=>{ h+=`<th style="min-width:32px;text-align:center;">${d.getDate()}<br><span style="font-size:9px;color:#aaa;">${SHORT[d.getDay()]}</span></th>`; });
+    h += `<th>Days</th></tr></thead><tbody>`;
+    ['Kitchen','Shop'].forEach(team=>{
+      const rows = emps.filter(e=>SM[e].team===team);
+      if(!rows.length) return;
+      h += `<tr class="team-row"><td colspan="${allDates.length+2}">${team} Team</td></tr>`;
+      rows.forEach(emp=>{
+        const {daysWorked,log} = stats[emp];
+        h += `<tr><td><strong>${emp}</strong><br><span style="font-size:10px;color:#aaa;">${SM[emp].role}</span></td>`;
+        allDates.forEach(d=>{
+          const st = log[dk(d)]||'A';
+          h += `<td style="text-align:center;"><span class="${st}">${st==='H'?'½':st}</span></td>`;
+        });
+        h += `<td><strong>${daysWorked}</strong></td></tr>`;
+      });
+    });
+    h += `</tbody></table></div>
+    <div class="legend">
+      <span><span class="P">P</span> Present (full day)</span>
+      <span><span class="H">½</span> Half day</span>
+      <span><span class="A">A</span> Absent</span>
+    </div>`;
+
+    app.innerHTML = h;
+
+  } catch(e){
+    app.innerHTML = `<p style="color:#A32D2D;padding:2rem 0;">Error: ${e.message}</p>`;
+  }
+}
 </script>
 </body>
 </html>
